@@ -4,7 +4,7 @@
 This project aim to processes multipart/form-data POST requests 
 
 ## Architecture
-![Architecture Diagram](docs/architecture_diagram.png)
+![Architecture Diagram](docs/architecture.png)
 
 
 ## Components
