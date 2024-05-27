@@ -4,7 +4,8 @@ data "aws_iam_policy_document" "lambda_assume_role" {
     principals {
       type = "Service"
       identifiers = [ 
-        "lambda.amazonaws.com"
+        "lambda.amazonaws.com",
+        "apigateway.amazonaws.com"
          ]
     }
     actions = [ "sts:AssumeRole" ]
@@ -26,10 +27,12 @@ data "aws_iam_policy_document" "bucket_policy" {
   statement {
     effect   = "Allow"
     actions = [
-              "logs:CreateLogGroup",
-              "logs:CreateLogStream",
-              "logs:PutLogEvents"
-            ]
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+      ]
     resources = [
       "*",
       ]

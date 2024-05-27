@@ -25,6 +25,16 @@ resource "aws_api_gateway_method" "method" {
     "method.request.header.Content-Type" = true
   }
 }
+resource "aws_api_gateway_method_settings" "settings" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  stage_name = aws_api_gateway_stage.stage.stage_name
+  method_path = "*/*"
+
+  settings {
+    metrics_enabled = true
+    logging_level   = "INFO"
+  }
+}
 resource "aws_api_gateway_integration" "lambda_integration" {
   rest_api_id             = aws_api_gateway_rest_api.api.id
   resource_id             = aws_api_gateway_resource.resource.id
@@ -87,5 +97,37 @@ resource "aws_api_gateway_stage" "stage" {
   deployment_id = aws_api_gateway_deployment.deployment.id
   rest_api_id   = aws_api_gateway_rest_api.api.id
   stage_name    = "dev"
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.access_logs.arn
+    format = "$context.extendedRequestId"
+  }
 }
 
+resource "aws_api_gateway_method_response" "method_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.resource.id
+  http_method = aws_api_gateway_method.method.http_method
+  status_code = "200"
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Credentials"  = true
+  }
+}
+
+resource "aws_api_gateway_account" "account" {
+  depends_on = [var.cloudwatch_role_arn]
+  cloudwatch_role_arn = var.cloudwatch_role_arn
+}
+resource "aws_cloudwatch_log_group" "log_group" {
+  name = "med-serverless-lab-logs"
+}
+resource "aws_cloudwatch_log_group" "access_logs" {
+  name = "med-serverless-access-lab"
+}

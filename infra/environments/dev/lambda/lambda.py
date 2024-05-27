@@ -13,12 +13,25 @@ def push_to_s3(data, event_client):
         s3_key = f"{event_client}/event_{message_id}.json" 
         logger.info(f"Uploading to S3 with key: {s3_key}")
         s3_client.put_object(Bucket=bucket_name, Key=s3_key, Body=json.dumps(data))
-            
+        return {
+            'statusCode': 200,
+            'isBase64Encoded': False,
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Content-Type": "application/json"
+            },
+            'body': json.dumps({'message': 'Data saved to S3'})
+        }
     except Exception as e:
         logger.error(f"Failed to upload data to S3: {e}")
 
         return {
             'statusCode': 500,
+            'isBase64Encoded' : False,
+            "headers": {
+                        "Access-Control-Allow-Origin":"*",
+                        "Content-Type": "application/json"
+                        },
             'body': json.dumps({'error': 'Failed to save data to S3'})
     }
 def process_multipart_data(body, content_type):
@@ -40,10 +53,17 @@ def process_event(event):
         headers = event.get('headers', {})
         client_name = headers.get('x-settings')
         if not client_name:
-            return {
-                'statusCode': 400,  
+            response =  {
+                'isBase64Encoded' : False,
+                'statusCode': 400, 
+                "headers": {
+                        "Access-Control-Allow-Origin":"*",
+                        "Content-Type": "application/json"
+                        },
                 'body': json.dumps({'error': 'x-settings header is missing'})
+                
             }
+            return response
         content_type = headers.get('Content-Type')
         body = base64.b64decode(event['body']) if event.get('isBase64Encoded') else event['body']
             
@@ -54,7 +74,12 @@ def process_event(event):
         except Exception as e:
             logger.error(f"Failed to process event: {e}")
             return {
+            'isBase64Encoded' : False,
             'statusCode': 500,
+            "headers": {
+                        "Access-Control-Allow-Origin":"*",
+                        "Content-Type": "application/json"
+                        },
             'body': json.dumps({'error': "Failed to process event"})
         }
        
@@ -64,7 +89,13 @@ def lambda_handler(event, context):
         return response
     except Exception as e:
         logger.error(f"Unhandled exception: {e}")
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': 'Internal server error'})
-        }
+        response = {
+            'isBase64Encoded' : False,
+            "statusCode": 500,
+            "headers": {
+                        "Access-Control-Allow-Origin":"*",
+                        "Content-Type": "application/json"
+                        },
+            "body": json.dumps( { "error": "Internal server error"})}
+    return response
+        
